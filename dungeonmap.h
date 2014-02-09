@@ -71,8 +71,7 @@ public:
   int ycoord;
   float xpos;
   float ypos;
-  void save_map(QString map);
-  void writeXML();
+  void writeXML(QString map);
   bool load_map(QString map);
   void draw_map();
   void empty_map();
@@ -96,6 +95,7 @@ public:
   QPixmap floor_trappng;
   QPixmap floor_doorhorpng;
   QPixmap floor_doorverpng;
+  QPixmap floor_rubble;
   QPixmap wallpng;
   QPixmap wall_holepng;
   QPixmap wall_buttonpng;

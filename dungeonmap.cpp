@@ -39,6 +39,7 @@ DungeonMap::DungeonMap()  : QGraphicsScene() {
     floor_trappng.load("//Users/erikruiter/Google Drive/Erik/projects/DungeonMapper/images/floor_trap.png");
     floor_doorhorpng.load("//Users/erikruiter/Google Drive/Erik/projects/DungeonMapper/images/floor_doorhor.png");
     floor_doorverpng.load("//Users/erikruiter/Google Drive/Erik/projects/DungeonMapper/images/floor_doorver.png");
+    floor_rubble.load("//Users/erikruiter/Google Drive/Erik/projects/DungeonMapper/images/floor_rubble.png");
 
 
     // Initialize empty map
@@ -150,6 +151,7 @@ bool DungeonMap::updateFloor(Tile *t, int floortype ) {
     if (floortype == 4) { pixmap = floor_trappng;    }
     if (floortype == 5) { pixmap = floor_doorhorpng;    }
     if (floortype == 6) { pixmap = floor_doorverpng;    }
+    if (floortype == 7) { pixmap = floor_rubble;    }
 
 
     floor = getItem(t->xcoord,t->ycoord,"floor");
@@ -348,24 +350,13 @@ void DungeonMap::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent) {
   if ((prevxcoord != xcoord) | (prevycoord != ycoord)) emit coordChanged();
 }
 
-void DungeonMap::save_map(QString map) {
-    writeXML();
-}
-
 bool DungeonMap::load_map(QString mapBook) {
- /*   for (int i=0; i < this->mapBook.map.size(); ++i) {
-        this->currentMap = this->mapBook.map.at(i);
-        empty_map();
-        this->mapBook.map.removeAt(i);
 
-    }*/
-    while (this->mapBook.map.size() > 0) {
-        this->mapBook.map.removeAt(0);
-    }
     QFile file(mapBook);
 
     Tile * t;
     Text * textItem;
+    int maxTextIdTemp=0;
     Map * tempmap;
     QByteArray tiledata;
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) return 0;
@@ -379,6 +370,7 @@ bool DungeonMap::load_map(QString mapBook) {
     while(!xml.atEnd()) {
         qDebug() << xml.name();
         xml.readNext();
+        qDebug() << xml.name() << xml.tokenString();
      //   if(token == QXmlStreamReader::StartElement) {
 
             if((xml.name() == "mapbook") && (xml.tokenString() == "StartElement")) {
@@ -418,19 +410,23 @@ bool DungeonMap::load_map(QString mapBook) {
                     this->currentMap->tiles.append(t);
                 }
             }
-            if((xml.name() == "textItem") && (xml.tokenString() == "StartElement") ) {
+            if((xml.name() == "textitem") && (xml.tokenString() == "StartElement") ) {
                 attributes = xml.attributes();
                 textItem = new Text;
                 textItem->id = attributes.value("id").toString().toInt();
                 textItem->xpos = attributes.value("xpos").toString().toFloat();
                 textItem->ypos = attributes.value("ypos").toString().toFloat();
-
-
-
+                textItem->textString = xml.readElementText();
+                qDebug() << "found text:" << "id" << attributes.value("id").toString() << textItem->textString;
+                this->currentMap->text.append(textItem);
+                maxTextIdTemp++;
             }
+
+
     }
 
     this->currentMap = this->mapBook.map.at(0);
+
     draw_map();
 
    return 1;
@@ -469,8 +465,8 @@ QGraphicsItem * DungeonMap::getItem(int xcoord, int ycoord, QString itemtype) {
     return NULL;
 }
 
-void DungeonMap::writeXML() {
-    QFile file("//Users/erikruiter/mapbook.map");
+void DungeonMap::writeXML(QString map) {
+    QFile file(map);
     Tile * t;
     QString tiledata;
     if ( file.open(QIODevice::WriteOnly) )
@@ -498,11 +494,14 @@ void DungeonMap::writeXML() {
         stream.writeTextElement("tiles", ba.toBase64());
         foreach (Text * t, mapBook.map.at(mi)->text) {
             stream.writeStartElement("textitem");
+
             stream.writeAttribute("id",QString::number(t->id));
             stream.writeAttribute("xpos",QString::number(t->xpos));
-            stream.writeAttribute("xpos",QString::number(t->ypos));
-            stream.writeTextElement("textString",t->textString);
-            stream.writeEndElement(); // textitem
+            stream.writeAttribute("ypos",QString::number(t->ypos));
+            stream.writeCharacters(t->textString);
+
+            stream.writeEndElement();
+
         }
         stream.writeEndElement(); // map
 

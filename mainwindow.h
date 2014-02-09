@@ -46,6 +46,7 @@ public:
     QAction * Floor_trap;
     QAction * floor_doorhor;
     QAction * floor_doorver;
+    QAction * floor_rubble;
 
 public slots:
 

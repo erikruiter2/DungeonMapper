@@ -60,7 +60,6 @@ MainWindow::MainWindow(QWidget *parent) :
     QObject::connect(ui->actionMap_Preferences,SIGNAL(triggered()),SLOT(show_mapPreferences()));
     QObject::connect(ui->actionLoad,SIGNAL(triggered()),SLOT(load_mapfiledialog()));
     QObject::connect(ui->actionSaveAs,SIGNAL(triggered()),SLOT(saveas_mapfiledialog()));
-    //QObject::connect(ui->actionSave,SIGNAL(triggered()),SLOT(save_map(QString )));
     QObject::connect(ui->actionQuit,SIGNAL(triggered()),SLOT(close()));
     QObject::connect(ui->wallLeftButton,SIGNAL(triggered(QAction *)),SLOT(updateSelectedWall_left(QAction *)));
     QObject::connect(ui->wallRightButton,SIGNAL(triggered(QAction *)),SLOT(updateSelectedWall_right(QAction *)));
@@ -165,19 +164,41 @@ void MainWindow::show_mapPreferences() {
 void MainWindow::load_mapfiledialog() {
     QString map = QFileDialog::getOpenFileName(this, tr("Load File"),"",tr("Map files (*.map)"));
 
+
+    QObject::disconnect(MapSelectorTab,SIGNAL(currentChanged(int)),this,SLOT(tabChanged(int )));
+
+    qDebug() << "number of maps" << QString::number(scene->mapBook.map.size());
+
+       while (scene->mapBook.map.size() > 0) {
+           scene->mapBook.map.removeAt(0);
+       }
+    qDebug() << "number of maps" << QString::number(scene->mapBook.map.size());
+
+
     scene->load_map(map);
     ui->mapbookLineEdit->setText(scene->mapBook.name);
+    qDebug() << "number of maps" << QString::number(scene->mapBook.map.size());
 
-    qDebug() << scene->mapBook.map.size();
-    foreach(Map * map, scene->mapBook.map) {
-        MapSelectorTab->insertTab(MapSelectorTab->currentIndex(),map->name);
+    qDebug() << "tabcount" << QString::number(MapSelectorTab->count()) << QString::number(MapSelectorTab->currentIndex());
+    while (MapSelectorTab->count() > 0) {
+        MapSelectorTab->removeTab(0);
     }
-    MapSelectorTab->removeTab(MapSelectorTab->count()-2);
+    qDebug() << "tabcount" << QString::number(MapSelectorTab->count()) << QString::number(MapSelectorTab->currentIndex());
+
+
+    qDebug() << "number of maps" << QString::number(scene->mapBook.map.size());
+    foreach(Map * map, scene->mapBook.map) {
+        MapSelectorTab->addTab(map->name);
+           qDebug() << "tab added" << map->name;
+    }
+    MapSelectorTab->addTab(" + ");
+    QObject::connect(MapSelectorTab,SIGNAL(currentChanged(int)),SLOT(tabChanged(int )));
+
 }
 
 void MainWindow::saveas_mapfiledialog() {
     QString map = QFileDialog::getSaveFileName(this, tr("Save File"),"untitled.map",tr("Map files (*.map)"));
-    scene->save_map(map);
+    scene->writeXML(map);
 }
 
 void MainWindow::updateGridLabel() {
@@ -266,6 +287,7 @@ QString MainWindow::floorText(int floortype) {
     case 4: return "Trap";
     case 5: return "Horizontal Door";
     case 6: return "Vertical Door";
+    case 7: return "Rubble";
     }
     return "";
 }
@@ -288,6 +310,7 @@ short int MainWindow::floorIndex(QString floortype) {
     else if (floortype == "Trap") return 4;
     else if (floortype == "Horizontal Door") return 5;
     else if (floortype == "Vertical Door") return 6;
+    else if (floortype == "Rubble") return 7;
     else return -1;
 }
 
@@ -323,4 +346,6 @@ void MainWindow::setupFloorMenu() {
     floorMenu->addAction(floor_doorhor);
     floor_doorver = new QAction("Vertical Door", this);
     floorMenu->addAction(floor_doorver);
+    floor_rubble = new QAction("Rubble", this);
+    floorMenu->addAction(floor_rubble);
 }
