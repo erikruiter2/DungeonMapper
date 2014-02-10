@@ -10,5 +10,5 @@ Features:
 - Make mapbooks with multiple maps, and switch between them with a single click.
 - Store and load mapbooks in an xml format.
 
-DungeonMapper is built in QT Creator using QT 5.2
+DungeonMapper is built in QT Creator using QT 5.2.
 It was built on MacOS Mavericks, but should compile on any QT supported platfrom.
